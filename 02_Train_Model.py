@@ -115,7 +115,7 @@ def define_model(threshold_size,filter_size,pool_size,starting_filters,encoder_e
 
 
     
-    outputs = Conv2D(kernel_size=(3,3),filters=(17),padding="SAME", activation = "tanh")(model)#Output layer, shape = (256,256,17)?
+    outputs = Conv2D(kernel_size=(3,3),filters=(17),padding="SAME", activation = "softmax")(model)#Output layer, shape = (256,256,17)?
     model = keras.models.Model(inputs,outputs)
     opt = tf.train.AdamOptimizer(learning_rate=0.001, beta1=0.9, beta2=0.999, epsilon=1e-07)
     #opt = SGD(learning_rate=0.1)
@@ -136,17 +136,17 @@ def import_and_compile_model(modelname):
     model.compile(loss='binary_crossentropy', optimizer=opt,metrics=['mae','mse',"categorical_accuracy"])
     return model
 
-def train_model(model,tr_x,tr_y,val_x,val_y,N_Epochs,tensorboard, LOG_DIR):
-    checkpoint_cb = keras.callbacks.ModelCheckpoint(filepath=f'{LOG_DIR}_latest_Best_Val_Best.savedmodel', save_weights_only=False,save_best_only=True,monitor='categorical_accuracy', mode='max')
+def train_model(model,tr_x,tr_y,val_x,val_y,N_Epochs,tensorboard, LOG_DIR,batch_s = 16):
+    checkpoint_cb = keras.callbacks.ModelCheckpoint(filepath=f'{LOG_DIR}_latest_Best.savedmodel', save_weights_only=False,save_best_only=True,monitor='val_categorical_accuracy', mode='max')
     #checkpoint_cb = tf.keras.callbacks.ModelCheckpoint(filepath=f'{LOG_DIR}_latest_Best_Val.savedmodel', save_weights_only=False)
-    model.fit(tr_x,tr_y,epochs=N_Epochs,callbacks=[tensorboard,checkpoint_cb],validation_data=(val_x,val_y),batch_size=16)
+    model.fit(tr_x,tr_y,epochs=N_Epochs,callbacks=[tensorboard,checkpoint_cb],validation_data=(val_x,val_y),batch_size=batch_s)
     #model.save(LOG_DIR+'.model')
     
 if __name__ == "__main__":
     #Testing various configurations; input dataformat.
-    Num_Epochs = 100
-    LOG_DIR_ADAM = f"Exponential_UNet_LAB_Adam_MainTrain_02"
-    LOG_DIR_SGD = f"Exponential_UNet_LAB_SGD_MainTrain_0"
+    Num_Epochs = 200
+    LOG_DIR_ADAM = f"Exponential_UNet_LAB_Adam_MainTrain_G"
+    LOG_DIR_SGD = f"Exponential_UNet_LAB_SGD_MainTrain_G"
     try: 
         mkdir("logs") 
     except: 
@@ -158,20 +158,23 @@ if __name__ == "__main__":
     threshold_size = (1,1)#Dimensions for bottleneck
     filter_size = (3,3) #filter size
     pool_size = (2,2) #max / min / avg pool size
-    starting_filters = 30 #starting filters, also acts as min limit for number of filters
+    starting_filters = 40 #starting filters, also acts as min limit for number of filters
     encoder_exponent = 1.4 #Encoder exponent size, (1,~2)
-    decoder_exponent = 1.36 #Decoder exponent size, (1,~2), slightly smaller than encoder exponent
+    decoder_exponent = 1.38 #Decoder exponent size, (1,~2), slightly smaller than encoder exponent
     dropout = 0.2 #Dropout ratio, (0,~.5)
     max_filters = 768 # hard cap for max number of filters.
 
     #First ADAM model train.
+    batch_s = 16
     model = define_model(threshold_size,filter_size,pool_size,starting_filters,encoder_exponent,decoder_exponent,dropout,max_filters,LOG_DIR_ADAM)
-    train_model(model,train_in,train_out,test_in,test_out,Num_Epochs,tensorboard, LOG_DIR_ADAM)
+    train_model(model,train_in,train_out,test_in,test_out,Num_Epochs,tensorboard, LOG_DIR_ADAM, batch_s)
 
     #Second SGD model train.
-    SGD_model = import_and_compile_model(f"{LOG_DIR_ADAM}_latest_Best_Val_Best.savedmodel")
+    SGD_model = import_and_compile_model(f"{LOG_DIR_ADAM}_latest_Best.savedmodel")
     tensorboard = keras.callbacks.TensorBoard(log_dir=f'logs/{LOG_DIR_SGD}')
-    train_model(SGD_model,train_in,train_out,test_in,test_out,Num_Epochs,tensorboard, LOG_DIR_SGD)
+    batch_s = 8
+    Num_Epochs = 10
+    train_model(SGD_model,train_in,train_out,test_in,test_out,Num_Epochs,tensorboard, LOG_DIR_SGD, batch_s)
 
     train_in = []
     train_out = []
