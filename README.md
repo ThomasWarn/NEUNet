@@ -4,7 +4,7 @@ A novel exponential U-Net, currently evaluating DLRSD
 # Requirements
 pip install requirements.txt
 
-A GPU with ~8 GB of VRAM
+A GPU with 8GB+ of VRAM
 
 32GB+ of system RAM
 
