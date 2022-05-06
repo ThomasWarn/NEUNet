@@ -38,3 +38,6 @@ Project\logs
 4. Execute 02_Train_Model.py.
 5. Modify 03_Generate_Verification_Data.py to contain the SGD-optimized model.
 6. Execute 03_Generate_Verification_Data.py.
+
+
+If exclusively evaluating the model performance on a seperate dataset, a trained model can be downloaded from https://drive.google.com/file/d/1Jnz3rS8emz8S1C8yHqdjW48cxwBzARNE/view?usp=sharing
