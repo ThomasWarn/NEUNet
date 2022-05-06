@@ -59,18 +59,17 @@ def import_data(Train_Pkl,Val_Pkl):
         train_out.append(item[1])
     train = []
 
-    test_out = np.array(test_out)#*2-1#,dtype = np.float16
+    test_out = np.array(test_out)
     test_in = np.array(test_in)
-    train_out = np.array(train_out)#*2-1#,dtype = np.float16
+    train_out = np.array(train_out)
     train_in = np.array(train_in)
     print("##############################################")
     return train_in,train_out,test_in,test_out
 
 def define_model(threshold_size,filter_size,pool_size,starting_filters,encoder_exponent,decoder_exponent,dropout,max_filters,LOG_DIR_ADAM):
     model = Sequential()
-    #Try maxpool / avg pooling, with batch norm & without batch norm.
     #Encoder
-    inputs = keras.layers.Input(shape=(256,256,3)) #https://stackoverflow.com/questions/50888221/valueerror-layer-leaky-re-lu-1-was-called-with-an-input-that-isnt-a-symbolic-t
+    inputs = keras.layers.Input(shape=(256,256,3)) 
     num_encoding_layers = int(math.log(256/threshold_size[0],pool_size[0]))
     print(f"creating network structure...")
     print(f"num endode layers = {round(math.log(256/threshold_size[0],pool_size[0]),2)} with a bottleneck size of {int(256/((pool_size[0])**num_encoding_layers))},{int(256/((pool_size[0])**num_encoding_layers))}")#
@@ -87,13 +86,12 @@ def define_model(threshold_size,filter_size,pool_size,starting_filters,encoder_e
         if i!= num_encoding_layers - 1:
             model = LeakyReLU(alpha=0.1)(model_seg)
             if dropout>0:
-                #model = SpatialDropout2D(dropout)(model)
+
                 model = Dropout(dropout)(model)
             model = AveragePooling2D(pool_size=pool_size)(model)
         elif i == num_encoding_layers - 1: #Allows for stuff to be changed if needed in bottleneck layer
             model = LeakyReLU(alpha=0.1)(model_seg)
             if dropout>0:
-                #model = SpatialDropout2D(dropout)(model)
                 model = Dropout(dropout)(model)
             model = AveragePooling2D(pool_size=pool_size)(model)
     
@@ -102,7 +100,6 @@ def define_model(threshold_size,filter_size,pool_size,starting_filters,encoder_e
         model = keras.layers.Concatenate()([Conv2DTranspose(filters_in_layer, pool_size, strides=pool_size, padding='SAME')(model),(model_segment[-1-j])])
         model = LeakyReLU(alpha=0.1)(model)
         if dropout>0:
-            #model = SpatialDropout2D(dropout)(model)
             model = Dropout(dropout)(model)
     
 
@@ -124,10 +121,7 @@ def define_model(threshold_size,filter_size,pool_size,starting_filters,encoder_e
     
     with open(f"logs\\{LOG_DIR_ADAM}.txt","w") as txtfile:
         model.summary(print_fn=lambda x: txtfile.write(x + '\n'))
-        #txtfile.write(text)
-    #print(model.summary())
     time.sleep(10)
-    #time.sleep(99999)
     return model
 
 def import_and_compile_model(modelname):
@@ -137,16 +131,13 @@ def import_and_compile_model(modelname):
     return model
 
 def train_model(model,tr_x,tr_y,val_x,val_y,N_Epochs,tensorboard, LOG_DIR,batch_s = 16):
-    checkpoint_cb = keras.callbacks.ModelCheckpoint(filepath=f'{LOG_DIR}_latest_Best.savedmodel', save_weights_only=False,save_best_only=True,monitor='val_categorical_accuracy', mode='max')
-    #checkpoint_cb = tf.keras.callbacks.ModelCheckpoint(filepath=f'{LOG_DIR}_latest_Best_Val.savedmodel', save_weights_only=False)
+    checkpoint_cb = keras.callbacks.ModelCheckpoint(filepath=f'{LOG_DIR}_latest_best.savedmodel', save_weights_only=False,save_best_only=True,monitor='categorical_accuracy', mode='max')
     model.fit(tr_x,tr_y,epochs=N_Epochs,callbacks=[tensorboard,checkpoint_cb],validation_data=(val_x,val_y),batch_size=batch_s)
-    #model.save(LOG_DIR+'.model')
     
 if __name__ == "__main__":
-    #Testing various configurations; input dataformat.
     Num_Epochs = 200
-    LOG_DIR_ADAM = f"Exponential_UNet_LAB_Adam_MainTrain_G"
-    LOG_DIR_SGD = f"Exponential_UNet_LAB_SGD_MainTrain_G"
+    LOG_DIR_ADAM = f"Exponential_UNet_LAB_Adam_MainTrain"
+    LOG_DIR_SGD = f"Exponential_UNet_LAB_SGD_MainTrain"
     try: 
         mkdir("logs") 
     except: 
@@ -173,7 +164,7 @@ if __name__ == "__main__":
     SGD_model = import_and_compile_model(f"{LOG_DIR_ADAM}_latest_Best.savedmodel")
     tensorboard = keras.callbacks.TensorBoard(log_dir=f'logs/{LOG_DIR_SGD}')
     batch_s = 8
-    Num_Epochs = 10
+    Num_Epochs = 50
     train_model(SGD_model,train_in,train_out,test_in,test_out,Num_Epochs,tensorboard, LOG_DIR_SGD, batch_s)
 
     train_in = []
