@@ -1,5 +1,5 @@
 # NEUNet
-An experimental novel exponential U-Net, currently evaluating DLRSD
+A novel exponential U-Net, currently evaluating DLRSD
 
 # Requirements
 pip install requirements.txt
