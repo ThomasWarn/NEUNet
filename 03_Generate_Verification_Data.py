@@ -4,7 +4,6 @@ import os
 from tensorflow.keras.models import Sequential, save_model, load_model
 import pickle
 import random
-from matplotlib import pyplot as plt
 import pandas as pd
 import time
 #import seaborn as sn
@@ -12,7 +11,7 @@ import time
 
 n_test_samples = 4912
 val_pkl = "Val.pkl"
-model_name = "Exponential_UNet_LAB_SGD_MainTrain_G_latest_Best.savedmodel"
+model_name = "Exponential_UNet_LAB_SGD_MainTrain_latest_best.savedmodel"
 random.seed(1)
 
 def import_test_data(val_pickle_filename,n_test_samples):
@@ -41,32 +40,19 @@ def test_model(model,X_Inputs,Y_Outputs):
     return predictions
 
 def generate_binary_mask(float_seg_map):
-    #binary_seg_map = np.zeros((256,256,17),dtype = bool)
-    #for row in range(len(float_seg_map)):
-    #    for column in range(len(float_seg_map[row])):
-    #        max_index = np.argmax(float_seg_map[row,column])
-    #        binary_seg_map[row, column, max_index] = True
-
-    
     temp_test = list(np.argmax(float_seg_map,axis=2).reshape(256*256))
     binary_seg_map = np.eye(17,dtype = bool)[temp_test].reshape(256,256,17)
-    #print(binary_seg_map.shape)
-    #for layer in range(17):
-    #    print(binary_seg_map[0:10,0:10,layer])
-    #    cv2.imshow("test",np.array(binary_seg_map[:,:,layer],dtype=np.uint8)*255)
-    #    cv2.waitKey(0)
     return binary_seg_map
 
 def evaluate_results(model_outputs,true_outputs):
     num_categories = len(model_outputs[0][0][0])
     print(num_categories)
-    results_array = np.zeros((4,17,2))#accuracy, precision, recall, f1
+    results_array = np.zeros((3,17,2))#accuracy, precision, recall, f1
     time_start = time.time()
     for single_image in range(len(model_outputs)):
         #for image in dataset
         single_img_results_array = []
         binary_seg_map = generate_binary_mask(model_outputs[single_image])
-        #time.sleep(999)
         for layer in range(len(model_outputs[single_image][0][0])):
             #print(model_outputs[single_image,:,:,layer])
             #cv2.imshow("test",model_outputs[single_image,:,:,layer])
@@ -76,23 +62,15 @@ def evaluate_results(model_outputs,true_outputs):
             false_positives = np.sum(np.logical_and(binary_seg_map[:,:,layer] == 1,true_outputs[single_image,:,:,layer] == 0))
             true_negatives = np.sum(np.logical_and(binary_seg_map[:,:,layer] == 0,true_outputs[single_image,:,:,layer] == 0))
             false_negatives = np.sum(np.logical_and(binary_seg_map[:,:,layer] == 0,true_outputs[single_image,:,:,layer] == 1))
-            #print("#####################")
-            #time.sleep(1)
             sum_pred = np.sum(true_outputs[single_image,:,:,layer])
-            #accuracy = truepositives/sum_pred
+            
             results_array[0,layer,0] = true_positives + results_array[0,layer,0] #acc
             results_array[0,layer,1] = sum_pred + results_array[0,layer,1] #acc
             results_array[1,layer,0] = true_positives + results_array[1,layer,0] #prec
             results_array[1,layer,1] = true_positives + false_positives + results_array[1,layer,1] #prec
             results_array[2,layer,0] = true_positives + results_array[2,layer,0] #recall
             results_array[2,layer,1] = true_positives + false_negatives + results_array[2,layer,1] #recall
-            #results_array[3,layer,0] = true_positives + results_array[0,layer,0] #f1
-            #results_array[3,layer,1] = sum_pred + results_array[0,layer,1] #f1
-            #print(f"truepos = {truepositives}")
-            
-            #Accuracy = binary multiplication of sum(true*predicted)/sum(true)
-            #Precision = sum(true*pred)/sum(pred)
-        #time.sleep(999)
+
         if single_image%100 == 0:
             print(f"On image {single_image}, at t= {round(time.time()-time_start,3)}")
         #time.sleep(999)
