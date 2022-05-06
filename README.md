@@ -3,6 +3,8 @@ A novel exponential U-Net, currently evaluating DLRSD
 
 # Requirements
 pip install requirements.txt
+A GPU with ~8 GB of VRAM
+32GB+ of system RAM
 
 # Procedure to reproduce
 1. Download DLRSD image & segmentation dataset from http://weegee.vision.ucmerced.edu/datasets/landuse.html and https://sites.google.com/view/zhouwx/dataset .
