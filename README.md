@@ -41,3 +41,5 @@ Project\logs
 
 
 If exclusively evaluating the model performance on a seperate dataset, a trained model can be downloaded from https://drive.google.com/file/d/1Jnz3rS8emz8S1C8yHqdjW48cxwBzARNE/view?usp=sharing
+
+This model can be tested using 04_Test_With_Custom_Input.py. It is recommended to only use imagery from DLSRD as inputs although other data can be used as input. The network appears to be particulary sensetive to shadows so directly overhead lighting is critical. Also image scale should be identical to the DLSRD training data. Pretty much just make your images look similar to the DLSRD and it should work acceptably.
