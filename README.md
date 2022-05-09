@@ -17,6 +17,7 @@ A GPU with 8GB+ of VRAM
 Project\01_Prepare_Dataset.py
 Project\02_Train_Model.py
 Project\03_Generate_Verification_Data.py
+Project\04_Test_With_Custom_Input.py
 Project\DLRSD
 	Project\DLRSD\agricultural
 	Project\DLRSD\airplane
